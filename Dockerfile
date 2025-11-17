@@ -20,7 +20,7 @@ RUN echo "=== Patching config_linux.go to add Timeout ===" && \
     grep "Timeout:" server/mvcc/backend/config_linux.go
 
 # Build etcd
-RUN make build && cd tools/etcd-dump-db && go build -o ../../bin/etcdutl . && cd ../..
+RUN make build && make build-etcdutl
 
 FROM alpine:3.19
 RUN apk add --no-cache ca-certificates curl jq
