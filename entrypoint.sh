@@ -39,7 +39,8 @@ echo "  Data Directory: $DATA_DIR"
 echo "  Cluster State: $CLUSTER_STATE"
 echo "  Quota: 2GB"
 
-echo "=== Starting etcd with 60s timeout ==="
+# This title is from your script, but the fix is now the defrag on boot
+echo "=== Starting etcd with bootstrap defrag ==="
 
 # Start etcd with appropriate cluster state
 exec /usr/local/bin/etcd \
@@ -57,4 +58,8 @@ exec /usr/local/bin/etcd \
   --auto-compaction-retention=1h \
   --log-level="info" \
   --max-txn-ops=10000 \
-  --max-request-bytes=10485760
+  --max-request-bytes=10485760 \
+  \
+  # --- Attempt to defrag the db:
+  # Tells etcd to defrag the DB on startup if it can save >100MB
+  --experimental-bootstrap-defrag-threshold-megabytes=100
