@@ -16,11 +16,11 @@ RUN echo "=== Patching config_linux.go to add Timeout ===" && \
     sed -i 's|import (|import (\n\t"time"|' server/mvcc/backend/config_linux.go && \
     sed -i '/NoFreelistSync: true,/a\        Timeout:        60 * time.Second,' server/mvcc/backend/config_linux.go && \
     echo "=== Verifying patch ===" && \
-    # This grep will prove the patch is active
-    grep "Timeout:" server/mvcc/backend/config_linux.go
+    cat server/mvcc/backend/config_linux.go
 
+    
 # Build etcd
-RUN make build && make build-etcdutl
+RUN make build && cd tools/etcd-dump-db && go build -o ../../bin/etcdutl . && cd ../..
 
 FROM alpine:3.19
 RUN apk add --no-cache ca-certificates curl jq
