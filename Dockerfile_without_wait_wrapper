@@ -21,9 +21,8 @@ COPY --from=builder /build/etcd/bin/etcd /usr/local/bin/
 COPY --from=builder /build/etcd/bin/etcdctl /usr/local/bin/
 
 COPY entrypoint.sh /tmp/entrypoint.sh
-COPY etcd-wait.sh /tmp/etcd-wait.sh
+RUN chmod +x /tmp/entrypoint.sh
 
-RUN chmod +x /tmp/entrypoint.sh /tmp/etcd-wait.sh
-
-ENTRYPOINT ["sh", "/tmp/etcd-wait.sh"]
+EXPOSE 2379 2380
+ENTRYPOINT ["sh", "/tmp/entrypoint.sh"]
 CMD ["etcd"]
