@@ -16,7 +16,8 @@ RUN echo "=== Patching config_linux.go to add Timeout ===" && \
     sed -i 's|import (|import (\n\t"time"|' server/mvcc/backend/config_linux.go && \
     sed -i '/NoFreelistSync: true,/a\        Timeout:        60 * time.Second,' server/mvcc/backend/config_linux.go && \
     echo "=== Verifying patch ===" && \
-    cat server/mvcc/backend/config_linux.go
+    # This grep will prove the patch is active
+    grep "Timeout:" server/mvcc/backend/config_linux.go
 
 # Build etcd
 RUN make build && cd tools/etcd-dump-db && go build -o ../../bin/etcdutl . && cd ../..

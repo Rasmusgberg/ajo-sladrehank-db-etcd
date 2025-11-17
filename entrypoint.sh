@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+# NOTE: We have REMOVED 'set -e' to allow the retry loop to work.
 
 echo "=== etcd Container Starting on EC2 (Direct Docker) ==="
 
@@ -39,11 +39,11 @@ echo "  Data Directory: $DATA_DIR"
 echo "  Cluster State: $CLUSTER_STATE"
 echo "  Quota: 2GB"
 
-# This title is from your script, but the fix is now the defrag on boot
-echo "=== Starting etcd with bootstrap defrag ==="
+echo "=== Starting etcd with 60s patch, defrag, and retry loop ==="
 
-# Start etcd with appropriate cluster state
-exec /usr/local/bin/etcd \
+# This loop will retry if etcd fails
+# The patch should make this loop unnecessary, but this makes it bulletproof.
+until /usr/local/bin/etcd \
   --name="ajo-sladrehank-etcd" \
   --data-dir="$DATA_DIR" \
   --initial-advertise-peer-urls="http://$IP:2380" \
@@ -60,3 +60,7 @@ exec /usr/local/bin/etcd \
   --max-txn-ops=10000 \
   --max-request-bytes=10485760 \
   --experimental-bootstrap-defrag-threshold-megabytes=100
+do
+    echo "etcd failed to start (exit code $?). Retrying in 5 seconds..."
+    sleep 5
+done
