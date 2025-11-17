@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 echo "=== etcd Container Starting on EC2 (Direct Docker) ==="
 
@@ -57,6 +56,7 @@ echo "  Quota: 2GB"
 echo "=== Starting etcd with pre-warming and retry loop ==="
 
 # --- Start etcd with Retry Loop ---
+# Now that 'set -e' is gone, this loop will work as intended.
 until /usr/local/bin/etcd \
   --name="ajo-sladrehank-etcd" \
   --data-dir="$DATA_DIR" \
@@ -72,6 +72,7 @@ until /usr/local/bin/etcd \
   --max-txn-ops=10000 \
   --max-request-bytes=10485760
 do
+    # You should see this message in your logs now
     echo "etcd failed to start (exit code $?). Retrying in 5 seconds..."
     sleep 5
 done
