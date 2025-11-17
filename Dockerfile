@@ -11,10 +11,15 @@ RUN BACKEND_FILE=$(find . -name "*.go" -type f -exec grep -l "InitialMmapSize.*1
     echo "Found backend config in: $BACKEND_FILE" && \
     sed -i 's/10 \* 1024 \* 1024 \* 1024/2 * 1024 * 1024 * 1024/g' "$BACKEND_FILE"
 
-# Patch timeout - different approach
+# Patch timeout - search entire codebase for bolt.Open
 RUN echo "=== Patching bolt.Open timeout ===" && \
-    find server/storage/backend -name "*.go" -exec sed -i 's/time\.Second \* 10/time.Second * 60/g' {} \; && \
-    find server/storage/backend -name "*.go" -exec grep -n "time\.Second \* 60" {} \;
+    find . -name "*.go" -type f -exec grep -l "bolt.Open" {} \; | while read f; do \
+        echo "Patching file: $f"; \
+        sed -i 's/Timeout:.*time\.Second \* 10/Timeout: time.Second * 60/g' "$f"; \
+        sed -i 's/Timeout:.*10 \* time\.Second/Timeout: 60 * time.Second/g' "$f"; \
+    done && \
+    echo "=== Showing patched timeout values ===" && \
+    find . -name "*.go" -exec grep -n "Timeout:.*60.*time\.Second" {} \; | head -10
 
 # Show what we patched
 RUN echo "=== Patched InitialMmapSize ===" && \
