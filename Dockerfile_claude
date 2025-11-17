@@ -10,19 +10,22 @@ WORKDIR /build/etcd
 RUN BACKEND_FILE=$(find . -name "*.go" -type f -exec grep -l "InitialMmapSize.*1024.*1024.*1024" {} \; | head -1) && \
     echo "Found backend config in: $BACKEND_FILE" && \
     sed -i 's/10 \* 1024 \* 1024 \* 1024/2 * 1024 * 1024 * 1024/g' "$BACKEND_FILE"
+
+RUN sed -i 's/DefaultBoltTimeout = 10 \* time.Second/DefaultBoltTimeout = 60 * time.Second/' \
+    $(grep -rl "DefaultBoltTimeout" .)
     
-# Find and patch the timeout - search for the actual file
-RUN echo "=== Finding files with bolt.Open timeout ===" && \
-    find . -name "*.go" -type f -exec grep -l "bolt\.Open.*Timeout.*10" {} \; > /tmp/files_to_patch.txt && \
-    cat /tmp/files_to_patch.txt && \
-    echo "=== Patching timeout in found files ===" && \
-    cat /tmp/files_to_patch.txt | while read f; do \
-        echo "Patching: $f"; \
-        sed -i 's/\(Timeout:.*\)10 \* time\.Second/\160 * time.Second/g' "$f"; \
-        sed -i 's/\(Timeout:.*\)time\.Second \* 10/\1time.Second * 60/g' "$f"; \
-    done && \
-    echo "=== Verifying patches ===" && \
-    find . -name "*.go" -exec grep -n "Timeout.*60.*time\.Second" {} \; | head -5
+# # Find and patch the timeout - search for the actual file
+# RUN echo "=== Finding files with bolt.Open timeout ===" && \
+#     find . -name "*.go" -type f -exec grep -l "bolt\.Open.*Timeout.*10" {} \; > /tmp/files_to_patch.txt && \
+#     cat /tmp/files_to_patch.txt && \
+#     echo "=== Patching timeout in found files ===" && \
+#     cat /tmp/files_to_patch.txt | while read f; do \
+#         echo "Patching: $f"; \
+#         sed -i 's/\(Timeout:.*\)10 \* time\.Second/\160 * time.Second/g' "$f"; \
+#         sed -i 's/\(Timeout:.*\)time\.Second \* 10/\1time.Second * 60/g' "$f"; \
+#     done && \
+#     echo "=== Verifying patches ===" && \
+#     find . -name "*.go" -exec grep -n "Timeout.*60.*time\.Second" {} \; | head -5
 
 # Show what we patched
 RUN echo "=== Patched InitialMmapSize ===" && \

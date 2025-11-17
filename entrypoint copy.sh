@@ -39,13 +39,10 @@ echo "  Data Directory: $DATA_DIR"
 echo "  Cluster State: $CLUSTER_STATE"
 echo "  Quota: 2GB"
 
-echo "=== Starting etcd with retry loop (for slow EBS) ==="
+echo "=== Starting etcd with 60s timeout ==="
 
-# We wrap the etcd command in a loop.
-# If etcd fails to start (like a 10s timeout on a slow EBS volume),
-# it will exit with an error, and the loop will wait 5s and try again.
-# We remove 'exec' to allow the loop to retry.
-until /usr/local/bin/etcd \
+# Start etcd with appropriate cluster state
+exec /usr/local/bin/etcd \
   --name="ajo-sladrehank-etcd" \
   --data-dir="$DATA_DIR" \
   --initial-advertise-peer-urls="http://$IP:2380" \
@@ -59,11 +56,3 @@ until /usr/local/bin/etcd \
   --log-level="info" \
   --max-txn-ops=10000 \
   --max-request-bytes=10485760
-do
-    echo "etcd failed to start (exit code $?). Retrying in 5 seconds..."
-    sleep 5
-done
-
-# Once etcd starts successfully, it will run in the foreground,
-# and this script will wait for it to finish (which it won't, as it's a server).
-# This is the desired behavior.
