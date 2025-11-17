@@ -19,12 +19,13 @@ RUN echo "=== Patching config_linux.go to add Timeout ===" && \
     cat server/mvcc/backend/config_linux.go
 
 # Build etcd
-RUN make build
+RUN make build && cd tools/etcd-dump-db && go build -o ../../bin/etcdutl . && cd ../..
 
 FROM alpine:3.19
 RUN apk add --no-cache ca-certificates curl jq
 COPY --from=builder /build/etcd/bin/etcd /usr/local/bin/
 COPY --from=builder /build/etcd/bin/etcdctl /usr/local/bin/
+COPY --from=builder /build/etcd/bin/etcdutl /usr/local/bin/
 
 COPY entrypoint.sh /tmp/entrypoint.sh
 RUN chmod +x /tmp/entrypoint.sh
